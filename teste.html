@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guarda-Roupa Virtual - Miri</title>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script&family=Poppins:wght@300&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(45deg, #ff9a9e, #fad0c4, #fad0c4, #ff9a9e);
+            background-size: 400% 400%;
+            animation: gradient 8s ease infinite;
+            font-family: 'Poppins', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        h1 {
+            font-family: 'Dancing Script', cursive;
+            font-size: 4em;
+            color: #f1f1f1;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
+        }
+
+        .category {
+            background-color: #f1f1f1;
+            border-radius: 10px;
+            margin: 20px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            width: 300px;
+        }
+
+        .category h2 {
+            font-size: 1.5em;
+            color: #333;
+        }
+
+        .category input {
+            display: none;
+        }
+
+        .category label {
+            display: block;
+            background-color: #ff6b81;
+            color: white;
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+
+        .clothes img {
+            width: 100px;
+            height: 100px;
+            margin: 10px;
+            border-radius: 10px;
+            transition: transform 0.3s;
+        }
+
+        .clothes img:hover {
+            transform: scale(1.1);
+        }
+
+        .look {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #f8f8f8;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .look img {
+            width: 80px;
+            height: 80px;
+        }
+
+        .look .remove {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background-color: #ff0000;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            padding: 5px;
+            font-size: 1.2em;
+        }
+
+        .history {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 800px;
+        }
+
+        .history h3 {
+            text-align: center;
+        }
+
+        .history .saved-look {
+            display: flex;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .history .saved-look img {
+            margin: 5px;
+        }
+
+        button {
+            background-color: #ff6b81;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+            cursor: pointer;
+            font-size: 1.2em;
+        }
+
+        button:hover {
+            background-color: #e55b6f;
+        }
+
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Guarda-Roupa Virtual - Miri</h1>
+
+    <div class="category" id="blusas">
+        <h2>Blusas</h2>
+        <input type="file" id="blusas-input" accept="image/*" multiple>
+        <label for="blusas-input">Escolher Blusas</label>
+        <div class="clothes" id="blusas-clothes"></div>
+    </div>
+
+    <div class="category" id="calcas">
+        <h2>Calças</h2>
+        <input type="file" id="calcas-input" accept="image/*" multiple>
+        <label for="calcas-input">Escolher Calças</label>
+        <div class="clothes" id="calcas-clothes"></div>
+    </div>
+
+    <div class="category" id="sapatos">
+        <h2>Sapatos</h2>
+        <input type="file" id="sapatos-input" accept="image/*" multiple>
+        <label for="sapatos-input">Escolher Sapatos</label>
+        <div class="clothes" id="sapatos-clothes"></div>
+    </div>
+
+    <div class="look" id="current-look">
+        <h3>Look Atual</h3>
+    </div>
+
+    <button id="save-look">Salvar Look</button>
+
+    <div class="history" id="history">
+        <h3>Histórico de Looks</h3>
+        <div class="saved-look" id="saved-looks"></div>
+    </div>
+
+    <script>
+        // Função para carregar as imagens salvas
+        function loadClothes() {
+            const categories = ['blusas', 'calcas', 'sapatos'];
+
+            categories.forEach(category => {
+                const clothes = JSON.parse(localStorage.getItem(category)) || [];
+                const clothesContainer = document.getElementById(`${category}-clothes`);
+
+                clothesContainer.innerHTML = '';  // Limpa o container antes de adicionar novas imagens
+
+                clothes.forEach(imageData => {
+                    const img = document.createElement('img');
+                    img.src = imageData;
+                    img.alt = category;
+                    img.addEventListener('click', () => addToLook(category, imageData));
+                    clothesContainer.appendChild(img);
+                });
+            });
+
+            const savedLooks = JSON.parse(localStorage.getItem('savedLooks')) || [];
+            const savedLooksContainer = document.getElementById('saved-looks');
+            savedLooksContainer.innerHTML = ''; // Limpa o histórico
+
+            savedLooks.forEach(look => {
+                const lookContainer = document.createElement('div');
+                look.forEach(item => {
+                    const img = document.createElement('img');
+                    img.src = item;
+                    lookContainer.appendChild(img);
+                });
+                savedLooksContainer.appendChild(lookContainer);
+            });
+        }
+
+        // Função para adicionar roupas ao look atual
+        function addToLook(category, imageData) {
+            const lookContainer = document.getElementById('current-look');
+            const img = document.createElement('img');
+            img.src = imageData;
+
+            const removeButton = document.createElement('button');
+            removeButton.textContent = 'X';
+            removeButton.classList.add('remove');
+            removeButton.onclick = () => removeFromLook(img, category, imageData);
+
+            const div = document.createElement('div');
+            div.appendChild(img);
+            div.appendChild(removeButton);
+
+            lookContainer.appendChild(div);
+        }
+
+        // Função para remover roupas do look atual
+        function removeFromLook(imgElement, category, imageData) {
+            const lookContainer = document.getElementById('current-look');
+            lookContainer.removeChild(imgElement.parentNode);
+            removeFromStorage(category, imageData);
+        }
+
+        // Função para remover roupa do localStorage
+        function removeFromStorage(category, imageData) {
+            let clothes = JSON.parse(localStorage.getItem(category)) || [];
+            clothes = clothes.filter(image => image !== imageData);
+            localStorage.setItem(category, JSON.stringify(clothes));
+        }
+
+        // Função para salvar o look atual
+        document.getElementById('save-look').addEventListener('click', () => {
+            const lookContainer = document.getElementById('current-look');
+            const lookImages = Array.from(lookContainer.getElementsByTagName('img')).map(img => img.src);
+
+            if (lookImages.length === 0) {
+                alert('Adicione roupas ao seu look!');
+                return;
+            }
+
+            const savedLooks = JSON.parse(localStorage.getItem('savedLooks')) || [];
+            savedLooks.push(lookImages);
+
+            localStorage.setItem('savedLooks', JSON.stringify(savedLooks));
+            loadClothes();  // Recarregar histórico
+            alert('Look salvo com sucesso!');
+        });
+
+        // Função para lidar com o carregamento de novas roupas
+        function handleFileInput(event, category) {
+            const files = event.target.files;
+            const clothes = JSON.parse(localStorage.getItem(category)) || [];
+
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const imageData = e.target.result;
+                    clothes.push(imageData);
+                    localStorage.setItem(category, JSON.stringify(clothes));
+                    loadClothes();
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // Adicionar eventos de carregamento para cada categoria
+        document.getElementById('blusas-input').addEventListener('change', (e) => handleFileInput(e, 'blusas'));
+        document.getElementById('calcas-input').addEventListener('change', (e) => handleFileInput(e, 'calcas'));
+        document.getElementById('sapatos-input').addEventListener('change', (e) => handleFileInput(e, 'sapatos'));
+
+        // Carregar roupas e looks ao iniciar a página
+        window.onload = loadClothes;
+    </script>
+</body>
+</html>
